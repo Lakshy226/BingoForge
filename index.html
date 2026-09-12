@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BingoForge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --surface-hover: #334155;
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent-color: #ec4899;
+            --accent-hover: #db2777;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --glow-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 { font-weight: 800; tracking: tight; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .text-accent { color: var(--accent-color); }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 2rem; }
+        .mt-4 { margin-top: 2rem; }
+
+        button {
+            background: var(--surface-color);
+            color: var(--text-main);
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        button.primary { background: var(--primary-color); }
+        button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+        
+        button.accent { background: var(--accent-color); box-shadow: var(--glow-shadow); }
+        button.accent:hover:not(:disabled) { background: var(--accent-hover); }
+
+        input[type="text"] {
+            width: 100%;
+            background: var(--surface-hover);
+            border: 2px solid var(--surface-hover);
+            color: var(--text-main);
+            padding: 14px 16px;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: border-color 0.2s ease;
+            outline: none;
+            text-transform: uppercase;
+        }
+        input[type="text"]:focus { border-color: var(--primary-color); }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.3s ease; }
+        .screen.active { display: flex; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bingo-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            background: var(--surface-color);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+
+        .bingo-header {
+            display: contents;
+        }
+
+        .bingo-letter {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .bingo-cell {
+            background: var(--bg-color);
+            border-radius: var(--border-radius-sm);
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+            border: 2px solid transparent;
+        }
+
+        .bingo-cell:hover { border-color: var(--primary-color); }
+        .bingo-cell.marked {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(0.92);
+            border-color: var(--primary-hover);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+        .bingo-cell.free-space {
+            background: var(--surface-hover);
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+        .bingo-cell.free-space.marked { background: var(--primary-color); color: white; }
+
+        .host-call-display {
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--glow-shadow);
+        }
+
+        .huge-number {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -2px;
+            line-height: 1;
+            margin: 1rem 0;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .host-grid-overview {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            gap: 2px;
+            margin-top: 1rem;
+            background: var(--surface-color);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+        }
+        .host-grid-cell {
+            font-size: 0.6rem;
+            padding: 4px;
+            text-align: center;
+            background: var(--bg-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+        .host-grid-cell.called {
+            background: var(--success-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .player-item {
+            background: var(--surface-color);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .player-avatar {
+            background: var(--primary-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .achievements-panel {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .achievement-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.9rem;}
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .modal-content {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+        }
+        .toast {
+            background: var(--surface-hover);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--card-shadow);
+            animation: slideUp 0.3s ease forwards;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--error-color); }
+        .toast.warning { background: var(--warning-color); color: #000; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .flex-row { display: flex; gap: 10px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .w-full { width: 100%; }
+        .text-huge { font-size: 3rem; font-weight: 900; letter-spacing: 2px; color: var(--accent-color); }
+        .pulse { animation: pulseAnim 2s infinite; }
+        
+        @keyframes pulseAnim {
+            0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(236, 72, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .bingo-cell { font-size: 1rem; }
+            .bingo-letter { font-size: 1.2rem; }
+            .huge-number { font-size: 4rem; }
+            .host-call-display { padding: 2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- SCREEN: LANDING -->
+        <div id="screen-landing" class="screen active text-center">
+            <h1 class="text-huge mb-2 mt-4" style="font-size: 4rem;">BINGO<span style="color: var(--primary-color)">FORGE</span></h1>
+            <p class="text-muted mb-4 text-lg">Bring the room. We'll run the game.<br>Fast, simple, social Bingo.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto; width: 100%;">
+                <button class="primary pulse" style="padding: 20px; font-size: 1.2rem;" onclick="app.showScreen('host-setup')">
+                    👑 HOST A GAME
+                </button>
+                <button style="padding: 20px; font-size: 1.2rem;" onclick="app.showScreen('join-game')">
+                    👋 JOIN A GAME
+                </button>
+            </div>
+            
+            <div class="mt-4" style="background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); text-align: left; font-size: 0.9rem; color: var(--text-muted);">
+                <strong>How to play:</strong><br><br>
+                1. One person hosts and shares the 5-letter Group Code.<br>
+                2. Everyone else joins using the code on their phones.<br>
+                3. The host calls numbers. Players tap to mark them.<br>
+                4. Be the first to claim an achievement to win!
+            </div>
+        </div>
+
+        <!-- SCREEN: HOST SETUP -->
+        <div id="screen-host-setup" class="screen">
+            <h2 class="mb-4 text-center">Host a New Game</h2>
+            <div style="background: var(--surface-color); padding: 2rem; border-radius: var(--border-radius);">
+                <label class="text-muted mb-1" style="display: block;">Your Name (Host)</label>
+                <input type="text" id="host-name-input" placeholder="e.g. Master Caller" class="mb-4" value="HOST">
+                
+                <p class="text-muted mb-4" style="font-size: 0.9rem;">
+                    Default Settings:<br>
+                    • 5x5 Grid with Free Center<br>
+                    • Numbers 1-75<br>
+                    • Achievements: First Row & Four Corners
+                </p>
+                
+                <div class="flex-row">
+                    <button class="w-full" onclick="app.showScreen('landing')">Cancel</button>
+                    <button class="primary w-full" onclick="hostLogic.createGame()">Create Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN: JOIN GAME -->
+        <div id="screen-join-game" class="screen">
+            <h2 class="mb-4 text-center">Join Game</h2>
+            <div style="background: var(--surface-color); padding: 2rem; border-radius: var(--border-radius);">
+                <label class="text-muted mb-1" style="display: block;">Group Code</label>
+                <input type="text" id="join-code-input" placeholder="e.g. B7K4Q" class="mb-4" maxlength="5">
+                
+                <label class="text-muted mb-1" style="display: block;">Your Name</label>
+                <input type="text" id="join-name-input" placeholder="e.g. Lakshy" class="mb-4" maxlength="12">
+                
+                <div class="flex-row">
+                    <button class="w-full" onclick="app.showScreen('landing')">Back</button>
+                    <button class="primary w-full" onclick="playerLogic.joinGame()">Join Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN: HOST LOBBY -->
+        <div id="screen-host-lobby" class="screen">
+            <div class="text-center mb-4">
+                <p class="text-muted">GROUP CODE</p>
+                <h1 class="text-huge" id="display-group-code" style="cursor: pointer;" onclick="app.copyCode()">B7K4Q</h1>
+                <p class="text-muted" style="font-size: 0.8rem; margin-top: 5px;">Tap to copy</p>
+            </div>
+            
+            <div class="flex-between mb-2">
+                <h3>Players (<span id="host-player-count">0</span>)</h3>
+                <button style="padding: 5px 10px; font-size: 0.8rem;" onclick="demoLogic.addDemoPlayer()">+ Add Demo</button>
+            </div>
+            
+            <div class="player-list mb-4" id="host-player-list">
+                <!-- Players injected here -->
+            </div>
+            
+            <button class="accent w-full pulse" style="padding: 1.5rem; font-size: 1.2rem;" onclick="hostLogic.startGame()" id="btn-start-game">
+                START GAME
+            </button>
+        </div>
+
+        <!-- SCREEN: PLAYER LOBBY -->
+        <div id="screen-player-lobby" class="screen text-center" style="justify-content: center;">
+            <div style="background: var(--surface-color); padding: 3rem 2rem; border-radius: var(--border-radius);">
+                <h2 class="mb-2 text-accent">You're In!</h2>
+                <h3 class="mb-4" id="player-lobby-name">Name</h3>
+                
+                <div class="pulse" style="width: 60px; height: 60px; border: 4px solid var(--primary-color); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite, pulseAnim 2s infinite; margin: 0 auto 2rem auto;"></div>
+                
+                <p class="text-muted">Waiting for host to start...</p>
+                <p class="text-muted mt-4" style="font-size: 0.8rem;">Group Code: <span id="player-lobby-code" class="text-main font-bold"></span></p>
+            </div>
+        </div>
+
+        <!-- SCREEN: HOST GAME -->
+        <div id="screen-host-game" class="screen">
+            <div class="flex-between mb-2">
+                <p class="text-muted">Calls: <span id="host-call-count" class="text-main font-bold">0 / 75</span></p>
+                <button style="padding: 5px 10px; font-size: 0.8rem; background: var(--error-color);" onclick="hostLogic.confirmEndGame()">End Game</button>
+            </div>
+
+            <div class="host-call-display">
+                <p class="text-accent font-bold" style="letter-spacing: 2px;">LATEST CALL</p>
+                <div class="huge-number" id="host-current-call">--</div>
+            </div>
+
+            <button class="primary w-full pulse mb-4" style="padding: 1.5rem; font-size: 1.2rem;" onclick="hostLogic.callNextNumber()" id="btn-call-next">
+                CALL NEXT NUMBER
+            </button>
+
+            <h4 class="mb-1">Call History Board</h4>
+            <div class="host-grid-overview" id="host-board">
+                <!-- 75 tiny squares injected here -->
+            </div>
+            
+            <div id="host-demo-tools" class="mt-4 p-2" style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--text-muted);">
+                <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 5px;">Dev Tools</p>
+                <button style="padding: 5px 10px; font-size: 0.8rem;" onclick="demoLogic.simulateWin('firstRow')">Simulate First Row Claim</button>
+            </div>
+        </div>
+
+        <!-- SCREEN: PLAYER GAME -->
+        <div id="screen-player-game" class="screen">
+            <div class="flex-between mb-2" style="background: var(--surface-color); padding: 10px 15px; border-radius: var(--border-radius);">
+                <div>
+                    <p class="text-muted" style="font-size: 0.7rem;">LAST CALL</p>
+                    <h3 id="player-last-call" class="text-accent">--</h3>
+                </div>
+                <div class="text-right">
+                    <p class="text-muted" style="font-size: 0.7rem;">PLAYER</p>
+                    <h4 id="player-game-name">Name</h4>
+                </div>
+            </div>
+
+            <div class="bingo-card" id="player-bingo-card">
+                <div class="bingo-header">
+                    <div class="bingo-letter">B</div>
+                    <div class="bingo-letter">I</div>
+                    <div class="bingo-letter">N</div>
+                    <div class="bingo-letter">G</div>
+                    <div class="bingo-letter">O</div>
+                </div>
+                <div class="bingo-grid" id="player-bingo-grid" style="display: contents;">
+                    <!-- 25 cells injected here -->
+                </div>
+            </div>
+
+            <h4 class="mb-1 text-center">Achievements</h4>
+            <div class="achievements-panel mb-4">
+                <button class="achievement-btn" id="btn-claim-row" onclick="playerLogic.claimAchievement('firstRow')">
+                    <span>➖</span> First Row
+                </button>
+                <button class="achievement-btn" id="btn-claim-corners" onclick="playerLogic.claimAchievement('fourCorners')">
+                    <span>🔲</span> 4 Corners
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN: RESULTS -->
+        <div id="screen-results" class="screen text-center">
+            <h1 class="text-huge mb-2 mt-4" style="font-size: 3rem;">GAME OVER</h1>
+            
+            <div style="background: var(--surface-color); padding: 2rem; border-radius: var(--border-radius); margin-bottom: 2rem; text-align: left;">
+                <h3 class="mb-2 text-accent">🏆 Winners</h3>
+                <div class="mb-2">
+                    <span class="text-muted">First Row:</span> 
+                    <strong id="result-winner-row">None</strong>
+                </div>
+                <div>
+                    <span class="text-muted">Four Corners:</span> 
+                    <strong id="result-winner-corners">None</strong>
+                </div>
+                <hr style="border: 1px solid var(--bg-color); margin: 15px 0;">
+                <p class="text-muted" style="font-size: 0.9rem;">Total Calls: <span id="result-total-calls">0</span></p>
+            </div>
+
+            <button class="primary w-full mb-2" onclick="app.showScreen('landing'); app.clearState();">HOME / NEW GAME</button>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="modal-container">
+        <div class="modal-content" id="modal-body">
+            <!-- Modal content injected here -->
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const STORAGE_KEY = 'bingoforge_state';
+        
+        // --- STATE MANAGEMENT ---
+        let appState = {
+            view: 'landing', 
+            role: null, // 'host' or 'player'
+            me: null // local player object if player
+        };
+
+        // Represents the central "Server" database
+        let gameState = {
+            code: null,
+            status: 'LOBBY', // LOBBY, PLAYING, FINISHED
+            hostName: '',
+            players: [], // { id, name, card: [], marked: [] }
+            calledNumbers: [],
+            achievements: {
+                firstRow: { awardedTo: null, claims: [] }, // claims: [{playerId, name, time}]
+                fourCorners: { awardedTo: null, claims: [] }
+            }
+        };
+
+        // Standard Bingo Layout definitions
+        const BINGO_COLS = [
+            { letter: 'B', min: 1, max: 15 },
+            { letter: 'I', min: 16, max: 30 },
+            { letter: 'N', min: 31, max: 45 },
+            { letter: 'G', min: 46, max: 60 },
+            { letter: 'O', min: 61, max: 75 }
+        ];
+
+        // --- CORE UTILITIES ---
+        const app = {
+            init: () => {
+                app.checkStorage();
+                window.addEventListener('storage', app.handleStorageEvent);
+            },
+
+            checkStorage: () => {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    try {
+                        gameState = JSON.parse(raw);
+                        // If there is an active game, we don't automatically redirect in prototype
+                        // unless we stored session info. For simplicity, we just sync gameState.
+                    } catch (e) {
+                        console.error("Storage corrupted, resetting.");
+                        app.clearState();
+                    }
+                }
+            },
+
+            syncState: () => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+                app.updateUI();
+            },
+
+            handleStorageEvent: (e) => {
+                if (e.key === STORAGE_KEY && e.newValue) {
+                    gameState = JSON.parse(e.newValue);
+                    app.updateUI();
+                }
+            },
+
+            clearState: () => {
+                localStorage.removeItem(STORAGE_KEY);
+                gameState = { code: null, status: 'LOBBY', hostName: '', players: [], calledNumbers: [], achievements: { firstRow: { awardedTo: null, claims: [] }, fourCorners: { awardedTo: null, claims: [] } } };
+                appState = { view: 'landing', role: null, me: null };
+            },
+
+            showScreen: (screenId) => {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(`screen-${screenId}`).classList.add('active');
+                appState.view = screenId;
+                app.updateUI();
+            },
+
+            generateCode: () => {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                return Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+            },
+
+            generateId: () => 'id_' + Math.random().toString(36).substr(2, 9),
+
+            showToast: (msg, type = 'success') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+                toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            },
+
+            showModal: (html) => {
+                const overlay = document.getElementById('modal-container');
+                const body = document.getElementById('modal-body');
+                body.innerHTML = html;
+                overlay.classList.add('active');
+            },
+            
+            closeModal: () => {
+                document.getElementById('modal-container').classList.remove('active');
+            },
+
+            copyCode: () => {
+                if (!gameState.code) return;
+                const dummy = document.createElement('textarea');
+                document.body.appendChild(dummy);
+                dummy.value = gameState.code;
+                dummy.select();
+                document.execCommand('copy');
+                document.body.removeChild(dummy);
+                app.showToast('Group Code copied!');
+            },
+
+            updateUI: () => {
+                // Determine routing based on game status changes if necessary
+                if (appState.role === 'player') {
+                    if (gameState.status === 'PLAYING' && appState.view === 'player-lobby') {
+                        app.showScreen('player-game');
+                        app.showToast("Game Started!");
+                    } else if (gameState.status === 'FINISHED' && appState.view === 'player-game') {
+                        app.showScreen('results');
+                        uiLogic.renderResults();
+                    }
+                } else if (appState.role === 'host') {
+                    if (gameState.status === 'FINISHED' && appState.view === 'host-game') {
+                        app.showScreen('results');
+                        uiLogic.renderResults();
+                    }
+                }
+
+                // Call specific render functions based on current view
+                if (appState.view === 'host-lobby') uiLogic.renderHostLobby();
+                if (appState.view === 'host-game') uiLogic.renderHostGame();
+                if (appState.view === 'player-lobby') uiLogic.renderPlayerLobby();
+                if (appState.view === 'player-game') uiLogic.renderPlayerGame();
+            }
+        };
+
+        const hostLogic = {
+            createGame: () => {
+                const name = document.getElementById('host-name-input').value.trim() || 'HOST';
+                gameState.code = app.generateCode();
+                gameState.hostName = name;
+                gameState.status = 'LOBBY';
+                gameState.players = [];
+                gameState.calledNumbers = [];
+                gameState.achievements = {
+                    firstRow: { awardedTo: null, claims: [] },
+                    fourCorners: { awardedTo: null, claims: [] }
+                };
+                
+                appState.role = 'host';
+                app.syncState();
+                app.showScreen('host-lobby');
+            },
+
+            startGame: () => {
+                if (gameState.players.length === 0) {
+                    app.showToast('Waiting for at least one player to join.', 'warning');
+                    return;
+                }
+                gameState.status = 'PLAYING';
+                app.syncState();
+                app.showScreen('host-game');
+                uiLogic.initHostBoard();
+            },
+
+            callNextNumber: () => {
+                if (gameState.calledNumbers.length >= 75) {
+                    app.showToast('All 75 numbers called!', 'warning');
+                    return;
+                }
+
+                // Generate available numbers
+                let available = [];
+                BINGO_COLS.forEach(col => {
+                    for(let i=col.min; i<=col.max; i++) {
+                        let str = `${col.letter}-${i}`;
+                        if (!gameState.calledNumbers.includes(str)) available.push(str);
+                    }
+                });
+
+                if (available.length === 0) return;
+
+                // Pick random
+                const nextNum = available[Math.floor(Math.random() * available.length)];
+                gameState.calledNumbers.push(nextNum);
+                
+                // Highlight host UI immediately for responsiveness
+                const display = document.getElementById('host-current-call');
+                display.innerText = nextNum;
+                display.classList.remove('pulse');
+                void display.offsetWidth; // trigger reflow
+                display.classList.add('pulse');
+
+                app.syncState();
+            },
+
+            checkPendingClaims: () => {
+                // If a modal is already open, skip to avoid spam
+                if (document.getElementById('modal-container').classList.contains('active')) return;
+
+                ['firstRow', 'fourCorners'].forEach(achType => {
+                    const ach = gameState.achievements[achType];
+                    if (!ach.awardedTo && ach.claims.length > 0) {
+                        const claim = ach.claims[0];
+                        hostLogic.showVerificationModal(achType, claim);
+                    }
+                });
+            },
+
+            showVerificationModal: (achType, claim) => {
+                const title = achType === 'firstRow' ? 'First Row' : 'Four Corners';
+                const html = `
+                    <h2 class="mb-2">🏆 Claim Verification</h2>
+                    <p class="mb-4"><strong>${claim.name}</strong> claims they completed:<br><span class="text-accent text-lg">${title}</span></p>
+                    <p class="text-muted mb-4 text-sm">Ask the player to show you their card to verify.</p>
+                    <div class="flex-row">
+                        <button class="w-full" style="background: var(--error-color)" onclick="hostLogic.resolveClaim('${achType}', '${claim.playerId}', false)">Reject</button>
+                        <button class="primary w-full" style="background: var(--success-color)" onclick="hostLogic.resolveClaim('${achType}', '${claim.playerId}', true)">Verify Valid</button>
+                    </div>
+                `;
+                app.showModal(html);
+            },
+
+            resolveClaim: (achType, playerId, isValid) => {
+                app.closeModal();
+                const ach = gameState.achievements[achType];
+                
+                if (isValid) {
+                    const player = gameState.players.find(p => p.id === playerId);
+                    ach.awardedTo = player ? player.name : 'Unknown';
+                    // Clear all other claims for this achievement
+                    ach.claims = []; 
+                    app.showToast(`Achievement awarded to ${ach.awardedTo}!`);
+                } else {
+                    // Remove this specific claim
+                    ach.claims = ach.claims.filter(c => c.playerId !== playerId);
+                    app.showToast('Claim rejected.', 'warning');
+                }
+                app.syncState();
+            },
+
+            confirmEndGame: () => {
+                const html = `
+                    <h2 class="mb-2">End Game?</h2>
+                    <p class="text-muted mb-4">Are you sure you want to end this game for everyone?</p>
+                    <div class="flex-row">
+                        <button class="w-full" onclick="app.closeModal()">Cancel</button>
+                        <button class="primary w-full" style="background: var(--error-color)" onclick="hostLogic.endGame()">End Game</button>
+                    </div>
+                `;
+                app.showModal(html);
+            },
+
+            endGame: () => {
+                app.closeModal();
+                gameState.status = 'FINISHED';
+                app.syncState();
+                app.showScreen('results');
+                uiLogic.renderResults();
+            }
+        };
+
+        const playerLogic = {
+            joinGame: () => {
+                const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+                const name = document.getElementById('join-name-input').value.trim();
+
+                if (!code || !name) {
+                    app.showToast("Code and Name required.", "error");
+                    return;
+                }
+
+                // Force a fresh read from localStorage to avoid race condition where Host just created it
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    app.showToast("No active game found on this device.", "error");
+                    return;
+                }
+
+                const currentServerState = JSON.parse(raw);
+
+                if (currentServerState.code !== code) {
+                    app.showToast("Invalid Group Code.", "error");
+                    return;
+                }
+                if (currentServerState.status !== 'LOBBY') {
+                    app.showToast("Game already started or finished.", "error");
+                    return;
+                }
+
+                // Generate Player Data
+                const player = {
+                    id: app.generateId(),
+                    name: name,
+                    card: playerLogic.generateBingoCard(),
+                    marked: ['FREE']
+                };
+
+                // Add to server state
+                currentServerState.players.push(player);
+                gameState = currentServerState; // update local ref
+                app.syncState(); // Write back
+
+                // Update Local App State
+                appState.role = 'player';
+                appState.me = player;
+                app.showScreen('player-lobby');
+            },
+
+            generateBingoCard: () => {
+                const card = [];
+                BINGO_COLS.forEach((col, colIdx) => {
+                    const nums = new Set();
+                    const count = colIdx === 2 ? 4 : 5; // N column has 4 numbers (Free space in middle)
+                    while (nums.size < count) {
+                        nums.add(Math.floor(Math.random() * (col.max - col.min + 1)) + col.min);
+                    }
+                    const arr = Array.from(nums).sort((a,b) => a-b);
+                    
+                    if (colIdx === 2) {
+                        card.push(`${col.letter}-${arr[0]}`);
+                        card.push(`${col.letter}-${arr[1]}`);
+                        card.push(`FREE`);
+                        card.push(`${col.letter}-${arr[2]}`);
+                        card.push(`${col.letter}-${arr[3]}`);
+                    } else {
+                        arr.forEach(num => card.push(`${col.letter}-${num}`));
+                    }
+                });
+                
+                // The array is generated column by column (B0..B4, I0..I4).
+                // HTML Grid expects row by row. We need to transpose it.
+                const transposed = [];
+                for(let row=0; row<5; row++) {
+                    for(let col=0; col<5; col++) {
+                        transposed.push(card[col * 5 + row]);
+                    }
+                }
+                return transposed;
+            },
+
+            handleCellClick: (cellValue, cellElement) => {
+                if (cellValue === 'FREE') return;
+                
+                // Refresh state to ensure we have latest calls
+                app.checkStorage();
+                
+                // Check if called
+                if (!gameState.calledNumbers.includes(cellValue)) {
+                    app.showToast("That number hasn't been called yet.", "warning");
+                    return;
+                }
+
+                // Refresh local player state from central DB
+                const meInDb = gameState.players.find(p => p.id === appState.me.id);
+                if (!meInDb) return;
+
+                if (!meInDb.marked.includes(cellValue)) {
+                    meInDb.marked.push(cellValue);
+                    appState.me = meInDb;
+                    app.syncState();
+                    // UI will update naturally, but force element for instant feel
+                    cellElement.classList.add('marked');
+                }
+            },
+
+            claimAchievement: (achType) => {
+                app.checkStorage();
+                const ach = gameState.achievements[achType];
+                
+                if (ach.awardedTo) {
+                    app.showToast("Already awarded to " + ach.awardedTo, "warning");
+                    return;
+                }
+
+                // Prevent spam
+                if (ach.claims.find(c => c.playerId === appState.me.id)) {
+                    app.showToast("Claim already sent! Show your card to Host.", "warning");
+                    return;
+                }
+
+                // Perform LOCAL validation before sending to avoid annoying host
+                if (!playerLogic.validateAchievementLocal(achType)) {
+                    app.showToast("You haven't completed this pattern yet!", "error");
+                    return;
+                }
+
+                ach.claims.push({
+                    playerId: appState.me.id,
+                    name: appState.me.name,
+                    time: Date.now()
+                });
+                
+                app.syncState();
+                app.showToast("Claim sent! Show your card to the host.");
+            },
+
+            validateAchievementLocal: (achType) => {
+                const card = appState.me.card;
+                const marked = appState.me.marked;
+                
+                const isMarked = (idx) => marked.includes(card[idx]);
+
+                if (achType === 'firstRow') {
+                    // Check horizontal rows (0-4, 5-9, etc)
+                    for (let r=0; r<5; r++) {
+                        let complete = true;
+                        for (let c=0; c<5; c++) {
+                            if (!isMarked(r*5 + c)) complete = false;
+                        }
+                        if (complete) return true;
+                    }
+                    return false;
+                } 
+                else if (achType === 'fourCorners') {
+                    // Indices: 0 (top-left), 4 (top-right), 20 (bottom-left), 24 (bottom-right)
+                    return isMarked(0) && isMarked(4) && isMarked(20) && isMarked(24);
+                }
+                return false;
+            }
+        };
+
+        const uiLogic = {
+            renderHostLobby: () => {
+                document.getElementById('display-group-code').innerText = gameState.code;
+                document.getElementById('host-player-count').innerText = gameState.players.length;
+                
+                const list = document.getElementById('host-player-list');
+                list.innerHTML = gameState.players.length === 0 ? 
+                    '<p class="text-muted text-center py-4">Waiting for players...</p>' : '';
+                
+                gameState.players.forEach(p => {
+                    list.innerHTML += `
+                        <div class="player-item">
+                            <div style="display: flex; align-items: center;">
+                                <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
+                                <strong>${p.name}</strong>
+                            </div>
+                            <span style="color: var(--success-color); font-size: 0.8rem;">● Connected</span>
+                        </div>
+                    `;
+                });
+            },
+
+            renderPlayerLobby: () => {
+                if (appState.me) {
+                    document.getElementById('player-lobby-name').innerText = appState.me.name;
+                    document.getElementById('player-lobby-code').innerText = gameState.code;
+                }
+            },
+
+            initHostBoard: () => {
+                const board = document.getElementById('host-board');
+                board.innerHTML = '';
+                BINGO_COLS.forEach(col => {
+                    for(let i=col.min; i<=col.max; i++) {
+                        let id = `${col.letter}-${i}`;
+                        board.innerHTML += `<div class="host-grid-cell" id="board-cell-${id}">${i}</div>`;
+                    }
+                });
+            },
+
+            renderHostGame: () => {
+                document.getElementById('host-call-count').innerText = `${gameState.calledNumbers.length} / 75`;
+                if (gameState.calledNumbers.length > 0) {
+                    document.getElementById('host-current-call').innerText = gameState.calledNumbers[gameState.calledNumbers.length - 1];
+                }
+
+                // Highlight called numbers on board
+                gameState.calledNumbers.forEach(num => {
+                    const el = document.getElementById(`board-cell-${num}`);
+                    if (el) el.classList.add('called');
+                });
+
+                // Check for pending claims to verify
+                hostLogic.checkPendingClaims();
+            },
+
+            renderPlayerGame: () => {
+                document.getElementById('player-game-name').innerText = appState.me.name;
+                
+                const lastCallEl = document.getElementById('player-last-call');
+                if (gameState.calledNumbers.length > 0) {
+                    const latest = gameState.calledNumbers[gameState.calledNumbers.length - 1];
+                    if (lastCallEl.innerText !== latest) {
+                        lastCallEl.innerText = latest;
+                        lastCallEl.classList.remove('pulse');
+                        void lastCallEl.offsetWidth;
+                        lastCallEl.classList.add('pulse');
+                    }
+                }
+
+                // Render Card (only once, then just update classes)
+                const grid = document.getElementById('player-bingo-grid');
+                if (grid.children.length === 0 && appState.me.card.length === 25) {
+                    appState.me.card.forEach((val, idx) => {
+                        const cell = document.createElement('div');
+                        cell.className = 'bingo-cell';
+                        if (val === 'FREE') {
+                            cell.className += ' free-space marked';
+                            cell.innerText = '★';
+                        } else {
+                            // Extract just the number for display
+                            cell.innerText = val.split('-')[1];
+                        }
+                        cell.onclick = () => playerLogic.handleCellClick(val, cell);
+                        cell.id = `pcell-${val}`;
+                        grid.appendChild(cell);
+                    });
+                }
+
+                // Update Marked State
+                const meInDb = gameState.players.find(p => p.id === appState.me.id);
+                if (meInDb) {
+                    appState.me.marked = meInDb.marked;
+                    appState.me.marked.forEach(m => {
+                        const el = document.getElementById(`pcell-${m}`);
+                        if (el && m !== 'FREE') el.classList.add('marked');
+                    });
+                }
+
+                // Update Achievement Buttons
+                uiLogic.updateAchievementButton('firstRow', 'btn-claim-row');
+                uiLogic.updateAchievementButton('fourCorners', 'btn-claim-corners');
+            },
+
+            updateAchievementButton: (achType, btnId) => {
+                const btn = document.getElementById(btnId);
+                const ach = gameState.achievements[achType];
+                
+                if (ach.awardedTo) {
+                    btn.disabled = true;
+                    btn.innerHTML = ach.awardedTo === appState.me.name ? '🏆 You Won!' : `❌ Won by ${ach.awardedTo}`;
+                    btn.style.background = ach.awardedTo === appState.me.name ? 'var(--success-color)' : 'var(--surface-hover)';
+                } else {
+                    const isPending = ach.claims.some(c => c.playerId === appState.me.id);
+                    if (isPending) {
+                        btn.disabled = true;
+                        btn.innerHTML = '⏳ Verifying...';
+                    } else {
+                        btn.disabled = false;
+                        // Keep original text
+                        if (achType === 'firstRow' && !btn.innerHTML.includes('First Row')) btn.innerHTML = '➖ First Row';
+                        if (achType === 'fourCorners' && !btn.innerHTML.includes('4 Corners')) btn.innerHTML = '🔲 4 Corners';
+                    }
+                }
+            },
+
+            renderResults: () => {
+                const rRow = gameState.achievements.firstRow.awardedTo || 'None';
+                const rCor = gameState.achievements.fourCorners.awardedTo || 'None';
+                document.getElementById('result-winner-row').innerText = rRow;
+                document.getElementById('result-winner-corners').innerText = rCor;
+                document.getElementById('result-total-calls').innerText = gameState.calledNumbers.length;
+            }
+        };
+
+        const demoLogic = {
+            addDemoPlayer: () => {
+                const names = ['Aarav', 'Riya', 'Dev', 'Priya', 'Sam', 'Mia'];
+                const randomName = names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*100);
+                
+                const demoPlayer = {
+                    id: app.generateId(),
+                    name: randomName,
+                    card: playerLogic.generateBingoCard(),
+                    marked: ['FREE']
+                };
+                gameState.players.push(demoPlayer);
+                app.syncState();
+            },
+            
+            simulateWin: (achType) => {
+                if (gameState.players.length === 0) {
+                    app.showToast("Add demo players first!");
+                    return;
+                }
+                const p = gameState.players[0];
+                gameState.achievements[achType].claims.push({
+                    playerId: p.id,
+                    name: p.name,
+                    time: Date.now()
+                });
+                app.syncState();
+            }
+        };
+
+        // Initialize App
+        window.onload = app.init;
+        
+        // Expose to window for inline onclick handlers
+        window.app = app;
+        window.hostLogic = hostLogic;
+        window.playerLogic = playerLogic;
+        window.demoLogic = demoLogic;
+
+    </script>
+</body>
+</html>
